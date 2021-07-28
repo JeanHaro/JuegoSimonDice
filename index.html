@@ -1,0 +1,226 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8">
+    <title>Simon Dice</title>
+    <style>
+        body {
+        margin: 0;
+        background: #dedede;
+        display: flex;
+        align-items: center;
+        height: 100vh;
+        }
+
+        .gameboard {
+        height: 100vh;
+        width: 100vh;
+        border-radius: 50%;
+        overflow: hidden;
+        margin: 0 auto;
+        max-height: 60vh;
+        max-width: 60vh;
+        }
+
+        .color {
+        width: 50%;
+        height: 50%;
+        display: inline-block;
+        }
+
+        .left {
+        float: left;
+        }
+
+        .right {
+        float: left;
+        }
+
+        .celeste {
+        background: #22a6b3;
+        }
+
+        .celeste.light {
+        background: #7ed6df;
+        }
+
+        .violeta {
+        background: #be2edd;
+        }
+
+        .violeta.light {
+        background: #e056fd;
+        }
+
+        .naranja {
+        background: #f0932b;
+        }
+
+        .naranja.light {
+        background: #ffbe76;
+        }
+
+        .verde {
+        background: #6ab04c;
+        }
+
+        .verde.light {
+        background: #badc58;
+        }
+
+        .btn-start {
+        width: 400px;
+        height: 100px;
+        background: #ecf0f1;
+        color: #2c3e50;
+        font-size: 2.5rem;
+        position: absolute;
+        top: calc(50% - 50px);
+        left: calc(50% - 200px);
+        }
+
+        .hide {
+        display: none;
+        }
+    </style>
+</head>
+<body>
+    <div class="gameboard">
+        <div id="celeste" class="color celeste left" data-color="celeste"></div>
+        <div id="violeta" class="color violeta right" data-color="violeta"></div>
+        <div id="naranja" class="color naranja left" data-color="naranja"></div>
+        <div id="verde" class="color verde right" data-color="verde"></div>
+        <button id="btnEmpezar" class="btn-start" onclick="empezarJuego()">Empezar a jugar!</button>
+    </div>
+
+    <script>
+        const celeste = document.getElementById('celeste');
+        const violeta = document.getElementById('violeta');
+        const naranja = document.getElementById('naranja');
+        const verde = document.getElementById('verde');
+        const btnEmpezar = document.getElementById('btnEmpezar');
+
+        // Tendrá toda la lógica de nuestro juego
+        class Juego {
+            constructor() {
+                // Inicializar
+                this.inicializar();
+                this.generarSecuencia();
+                this.siguienteNivel();
+            }
+
+            inicializar() {
+                this.elegirColor = this.elegirColor.bind(this);
+                // Ocultar el btnEmpezar al inicializar el juego
+                // Le agregamos la clase, que está definida para ocultar
+                btnEmpezar.classList.add('hide');
+                // Nivel actual
+                // Ha medida pasa los niveles, este this.nivel aumentará
+                this.nivel = 1;
+                // Guardarmos los colores
+                this.colores = {
+                    celeste,
+                    violeta,
+                    naranja,
+                    verde
+                }
+            }
+
+            generarSecuencia() {
+                // La secuencia del juego
+                // Generar un array de números random
+                // Le decimos al constructor cuanto elemento queremos que tenga el array
+                // Llamamos a la función fill, colocamos todos los elementos en 0
+                /* Usamos fill, porque luego vamos a querer llamar a la función map y el map no va a funcionar 
+                cuando tengamos elementos que no están definidos dentro de un Array, y va a funcionar
+                cuando tenga elementos, aunque el valor sea 0 */
+                // Ese n vale 0 igual
+                // El valor de Math.random() da un valor entre 0 y 1, con decimales
+                // Cuando lo multiplicamos por 4, sería un valor de 0 entre 4, pero nunca llegaría ser 4
+                // Y lo que queremos es que quedarnos con el valor entero, osea 0, 1, 2 y 3
+                // Math.floor hará que redondee para bajo, osea 3.6 salga 3
+                this.secuencia = new Array(10).fill(0).map(n => Math.floor(Math.random() * 4));
+                
+            }
+
+            siguienteNivel() {
+                /* Va a llamar a iluminarSecuencia, cada vez que se llegue a un nuevo nivel se va a iluminar 
+                la secuencia */
+                this.iluminarSecuencia();
+                // Metodo que agregue los eventos de click
+                this.agregarEventosClick();
+            }
+
+            transformarNumeroAColor (numero) {
+                switch (numero) {
+                    case 0:
+                        // No se pone break porque el hecho nunca se ejecutará si se hace el return
+                        return 'celeste';
+                    case 1:
+                        return 'violeta';
+                    case 2:
+                        return 'naranja';
+                    case 3:
+                        return 'verde';
+                }
+            }
+
+            iluminarSecuencia() {
+                // Va a recorrer el Array de la secuencia hasta el nivel en el que esté el usuario
+                // Este for lo que va hacer es que por cada número, nos transforme el color
+                for (let i = 0; i < this.nivel; i++) {
+                    // Obtener el color que debemos iluminar y llamar a la función para que lo ilumine
+                    // Para obtener el color
+                    // El número de la secuencia del que estamos, que será aleatorio
+                    // Le colocamos let para que el color se mantenga con su color en cada bloque, y no repita el mismo
+                    /* Con const también podría ser, ya que no cambiaría el dato por nada, solamente
+                    generaría otra variable color con otro valor */
+                    const color = this.transformarNumeroAColor(this.secuencia[i]);
+                    // Se llama la función que hará iluminar el color
+                    // El primer color se iluminará en 0, el segundo en 1s, el tercero en 2s
+                    setTimeout(() => this.iluminarColor(color), 1000 * i);
+                    
+                }
+            }
+
+            iluminarColor (color) {
+                // El botón que tenga este color se va a iluminar
+                // ejemplo: this.colores['verde']
+                // la añades una clase que es light para que se ilumine cada vez que lo llamen
+                this.colores[color].classList.add('light');
+                setTimeout(() => this.apagarColor(color), 350);
+            }
+
+            apagarColor (color) {
+                this.colores[color].classList.remove('light');
+            }
+
+            agregarEventosClick() {
+                /* Cada uno de los colores tenemos que agregarle el evento click y decirle al navegador que función tenemos 
+                que ejecutar cuando se realice ese evento click, es algo que JS le indica al navegador y esa función
+                se va a ejecutar asincronamente */
+                // A la función elegirColor lo atamos al this que tiene como parámetro en bind
+                // Si quieremos que this.elegirColor esté siempre atado al juego, así que lo subimos al inicializar
+                this.colores.celeste.addEventListener('click', this.elegirColor);
+                this.colores.violeta.addEventListener('click', this.elegirColor);
+                this.colores.naranja.addEventListener('click', this.elegirColor);
+                this.colores.verde.addEventListener('click', this.elegirColor);
+            }
+
+            /* Cuando agregamos manejadores de evento o estos escuchadores de evento los métodos que se llaman, 
+            se llaman con un parámetro que se suele llamar ev */
+            elegirColor(ev) {
+                // Con this referenciado al juego en elegirColor, ya no sale la etiqueta, sino el juego
+                // console.log(this); // Sale la etiqueta a quien se llama
+            }
+        }
+
+        function empezarJuego() {
+            // Nuevo objeto al juego
+            window.juego = new Juego();
+        }
+
+        // console.log(juego); // Juego {secuencia: Array(0)}
+    </script>
+</body>
+</html>
